@@ -1,0 +1,6 @@
+*.gexf
+*.gml
+*.cys
+*.gephi
+*.json
+.vscode
