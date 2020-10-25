@@ -8,9 +8,6 @@ import copy
 from typing import List, Dict
 import itertools
 
-infile = sys.argv[1]
-outfile = sys.argv[2]
-
 with open("roam_parser.lark") as f:
 	parser = Lark(f, start='content', lexer='standard')
 
@@ -66,64 +63,68 @@ def get_content(node) -> List[str]:
 		else:
 			return([])
 
-with open(infile, "r") as f:
-	roam_json_string = f.read()
+def main(infile, outfile):
+	with open(infile, "r") as f:
+		roam_json_string = f.read()
 
-pagelist = json.loads(roam_json_string)
+	pagelist = json.loads(roam_json_string)
 
-graph_dict = {}
-graph_dict["directed"] = True
-graph_dict["data"] = {}
-graph_dict["elements"] = {}
-graph_dict["elements"]["nodes"] = []
-graph_dict["elements"]["edges"] = []
+	graph_dict = {}
+	graph_dict["directed"] = True
+	graph_dict["data"] = {}
+	graph_dict["elements"] = {}
+	graph_dict["elements"]["nodes"] = []
+	graph_dict["elements"]["edges"] = []
 
-for raw_page in pagelist:
-	if raw_page["title"] == "":
-		continue
-	page = {}
-	page["value"] = raw_page["title"]
-	graph_dict["elements"]["nodes"].append({"data": page})
-	if "title" in raw_page:
-		for link in find_links(raw_page["title"]):
-			graph_dict["elements"]["edges"].append({"data": {"source": raw_page["title"], "target": link}})
-	for block_content in get_content(raw_page):
-		if len(block_content) <= 2:
+	for raw_page in pagelist:
+		if raw_page["title"] == "":
 			continue
-		elif block_content[-1] is "]" and (not (block_content[-2:] == "]]")):
-			links = find_links(block_content[0:-1])
-		else:
-			try:
-				links = find_links(block_content)
-			except UnexpectedToken:
-				print("WARNING: Link parsing failure with block: " + block_content, file=sys.stderr)
-				exit
-		links = links + [tag for tag in find_tags(block_content) if not (tag in links)]
-		for link in links:
-			graph_dict["elements"]["edges"].append({"data": {"source": raw_page["title"], "target": link}})
+		page = {}
+		page["value"] = raw_page["title"]
+		graph_dict["elements"]["nodes"].append({"data": page})
+		if "title" in raw_page:
+			for link in find_links(raw_page["title"]):
+				graph_dict["elements"]["edges"].append({"data": {"source": raw_page["title"], "target": link}})
+		for block_content in get_content(raw_page):
+			if len(block_content) <= 2:
+				continue
+			elif block_content[-1] is "]" and (not (block_content[-2:] == "]]")):
+				links = find_links(block_content[0:-1])
+			else:
+				try:
+					links = find_links(block_content)
+				except UnexpectedToken:
+					print("WARNING: Link parsing failure with block: " + block_content, file=sys.stderr)
+					exit
+			links = links + [tag for tag in find_tags(block_content) if not (tag in links)]
+			for link in links:
+				graph_dict["elements"]["edges"].append({"data": {"source": raw_page["title"], "target": link}})
 
-graph = nx.json_graph.cytoscape_graph(graph_dict)
+	graph = nx.json_graph.cytoscape_graph(graph_dict)
 
-newgraph = copy.deepcopy(graph)
+	newgraph = copy.deepcopy(graph)
 
-if infile == "onni_personal.json":
-	for child in graph.successors('meta-data'):
-		newgraph.remove_node(child)
-for u, v in graph.edges():
-	try:
-		if u == v:
-			newgraph.remove_edge(u, v)
-	except nx.exception.NetworkXError:
-		pass
-graph = newgraph
+	if infile == "onni_personal.json":
+		for child in graph.successors('meta-data'):
+			newgraph.remove_node(child)
+	for u, v in graph.edges():
+		try:
+			if u == v:
+				newgraph.remove_edge(u, v)
+		except nx.exception.NetworkXError:
+			pass
+	graph = newgraph
 
-cytoscape_json = True
-gexf = False
+	cytoscape_json = True
+	gexf = False
 
-if cytoscape_json:
-	graph_dict = nx.json_graph.cytoscape_data(graph)
-	with open(outfile, 'w') as jf:
-		json.dump(graph_dict, jf)
+	if cytoscape_json:
+		graph_dict = nx.json_graph.cytoscape_data(graph)
+		with open(outfile, 'w') as jf:
+			json.dump(graph_dict, jf)
 
-if gexf:
-	nx.write_gexf(graph, outfile)
+	if gexf:
+		nx.write_gexf(graph, outfile)
+
+if __name__ == "__main__":
+	main(sys.argv[1], sys.argv[2])
