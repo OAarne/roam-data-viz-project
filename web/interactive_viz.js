@@ -14,17 +14,32 @@ const mainFunction = function (dataArray) {
 			{
 				selector: 'node',
 				style: {
-					'background-color': '#666',
-					'label': 'data(id)'
+					'background-color': '#eee8d5',
+					// 'label': 'data(content)',
+					'content': 'data(content)',
+					'text-valign': "center",
+					'text-halign': "center",
+					'shape': 'rectangle',
+					'width': 300,
+					'height': 150,
+					'color': '#586e75',
+					'text-wrap': 'wrap',
+					'text-max-width': 300,
+					// 'text-background-opacity': 1,
+					// 'text-background-color': '#eee8d5',
+					// 'text-background-shape': 'roundrectangle',
+					// 'text-border-color': '#000',
+					// 'text-border-width': 1,
+					// 'text-border-opacity': 1
 				}
 			},
-
 			{
 				selector: 'edge',
 				style: {
-					'width': 3,
-					'line-color': '#ccc',
-					'target-arrow-color': '#ccc',
+					'width': 20,
+					'opacity': 0.2,
+					'line-color': '#586e75',
+					'target-arrow-color': '#586e75',
 					'target-arrow-shape': 'triangle'
 				}
 			}
@@ -66,7 +81,7 @@ const mainFunction = function (dataArray) {
 	var expandedNodes = new Set() // the set of nodes that have been "expanded"
 	var filteredNodes = new Set() // the set of nodes that have been hidden, i.e. aren't wanted in the visualization.
 
-	startNodeId = "Remdesivir"
+	startNodeId = "Games Research"
 	expandedNodes.add(startNodeId)
 	cy.add(db.$id(startNodeId))
 	cy.center()
@@ -85,10 +100,8 @@ const mainFunction = function (dataArray) {
 			e.cy.center()
 		},
 		edgeLength: function (edge) {
-			console.log("edge weight: ")
-			console.log(edge.data().weight)
 			if (edge.data().weight === undefined) {
-				return 100
+				return 400
 			} else {
 				return 1000 / edge.data().weight
 			}
@@ -128,14 +141,14 @@ const mainFunction = function (dataArray) {
 		const layout = cy.layout(layoutConfig)
 		layout.run()
 
-		console.log(expandedNodes)
+		// console.log(expandedNodes)
 	}
 
 	cy.on("tap", "node", revealNeighborhood)
 }
 
 Promise.all([
-	fetch('page_graph.json').then(res => res.json())
+	fetch('permanote_graph.json').then(res => res.json())
 ]).then(function (dataArray) {
 	mainFunction(dataArray)
 })

@@ -41,7 +41,7 @@ def link_from_syntax_tree(node):
 			pagename += link_from_syntax_tree(child)
 	return(pagename)
 
-def find_tags(content):
+def find_tags(content: str) -> List[str]:
 	"""Return all of the tags in the content of a block"""
 	return [part[1:] for part in content.split() if part.startswith('#') and not part.startswith('#[[') and len(part) > 1]
 
@@ -63,18 +63,22 @@ def get_content(node) -> List[str]:
 		else:
 			return([])
 
+def initialize_cy_js_graph_dict(directed: bool=False) -> Dict:
+	graph_dict = {}
+	graph_dict["directed"] = directed
+	graph_dict["data"] = {}
+	graph_dict["elements"] = {}
+	graph_dict["elements"]["nodes"] = []
+	graph_dict["elements"]["edges"] = []
+	return graph_dict
+
 def main(infile, outfile):
 	with open(infile, "r") as f:
 		roam_json_string = f.read()
 
 	pagelist = json.loads(roam_json_string)
 
-	graph_dict = {}
-	graph_dict["directed"] = True
-	graph_dict["data"] = {}
-	graph_dict["elements"] = {}
-	graph_dict["elements"]["nodes"] = []
-	graph_dict["elements"]["edges"] = []
+	graph_dict = initialize_cy_js_graph_dict(directed=True)
 
 	for raw_page in pagelist:
 		if raw_page["title"] == "":
